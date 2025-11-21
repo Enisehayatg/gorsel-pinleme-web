@@ -18,6 +18,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone')->nullable();
+            $table->date('birth_date')->nullable();
+            $table->string('firebase_uid')->nullable()->unique();
             $table->timestamps();
             $table->softDeletes();
         });

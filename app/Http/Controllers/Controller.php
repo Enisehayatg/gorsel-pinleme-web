@@ -6,9 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Routing\Controller as BaseController;
 use Yajra\DataTables\DataTables;
 
-trait Controller
+class Controller extends BaseController
 {
     protected $model;
 
@@ -27,7 +28,7 @@ trait Controller
 
             return $this->fly("{$this->controllerName}.index");
         } catch (\Exception $e) {
-            Log::error('Failed to retrieve records: '.$e->getMessage());
+            Log::error('Failed to retrieve records: ' . $e->getMessage());
 
             return $this->fly("{$this->controllerName}.index", [], 'Failed to retrieve records. Please try again later.', true);
         }
@@ -40,9 +41,7 @@ trait Controller
 
     public function store(Request $request)
     {
-
         foreach ($request->all() as $field => $rules) {
-
             if (strpos($rules, 'image') !== false || strpos($rules, 'file') !== false) {
                 if ($request->hasFile($field)) {
                     $path = $request->file($field)->store("{$this->controllerName}", 'public');
@@ -53,14 +52,13 @@ trait Controller
 
         DB::beginTransaction();
         try {
-
             $this->model::create($request->all());
             DB::commit();
 
             return $this->flyWithNotification("{$this->controllerName}.index", 'Kaynak başarıyla oluşturuldu.', 'success');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to create resource: '.$e->getMessage());
+            Log::error('Failed to create resource: ' . $e->getMessage());
 
             return $this->flyWithNotification("{$this->controllerName}.create", 'Kaynak oluşturulamadı. Lütfen daha sonra tekrar deneyin.', 'error');
         }
@@ -71,13 +69,13 @@ trait Controller
         try {
             $this->compact['record'] = $this->model::findOrFail($id);
 
-            if (! $this->compact['record']) {
+            if (!$this->compact['record']) {
                 return $this->flyWithNotification("{$this->controllerName}.index", 'Resource not found.', 'error');
             }
 
             return $this->fly("{$this->controllerName}.show");
         } catch (\Exception $e) {
-            Log::error('Failed to retrieve resource: '.$e->getMessage());
+            Log::error('Failed to retrieve resource: ' . $e->getMessage());
 
             return $this->flyWithNotification("{$this->controllerName}.index", 'Failed to retrieve resource. Please try again later.', 'error');
         }
@@ -88,13 +86,13 @@ trait Controller
         try {
             $this->compact['record'] = $this->model::findOrFail($id);
 
-            if (! $this->compact['record']) {
+            if (!$this->compact['record']) {
                 return $this->flyWithNotification("{$this->controllerName}.index", 'Resource not found.', 'error');
             }
 
             return $this->fly("{$this->controllerName}.edit");
         } catch (\Exception $e) {
-            Log::error('Failed to retrieve resource for editing: '.$e->getMessage());
+            Log::error('Failed to retrieve resource for editing: ' . $e->getMessage());
 
             return $this->flyWithNotification("{$this->controllerName}.index", 'Failed to retrieve resource. Please try again later.', 'error');
         }
@@ -107,11 +105,6 @@ trait Controller
         foreach ($this->validationRules as $field => $rules) {
             if (strpos($rules, 'image') !== false || strpos($rules, 'file') !== false) {
                 if ($request->hasFile($field)) {
-                    //                    $record = $this->model::findOrFail($id);
-                    //                    if ($record->$field) {
-                    //                        Storage::delete($record->$field);
-                    //                    }
-
                     $path = $request->file($field)->store("{$this->controllerName}", 'public');
                     $validated[$field] = $path;
                 } else {
@@ -130,7 +123,7 @@ trait Controller
             return $this->flyWithNotification("{$this->controllerName}.index", 'Kaynak başarıyla güncellendi.', 'success');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update resource: '.$e->getMessage());
+            Log::error('Failed to update resource: ' . $e->getMessage());
 
             return $this->flyWithNotification("{$this->controllerName}.edit", 'Kaynak güncellenemedi. Lütfen daha sonra tekrar deneyin.', 'error', ['id' => $id]);
         }
@@ -141,7 +134,6 @@ trait Controller
         DB::beginTransaction();
         try {
             $record = $this->model::findOrFail($id);
-
             $record->delete();
 
             DB::commit();
@@ -149,7 +141,7 @@ trait Controller
             return $this->flyWithNotification("{$this->controllerName}.index", 'Kaynak başarıyla silindi.', 'success');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to delete resource: '.$e->getMessage());
+            Log::error('Failed to delete resource: ' . $e->getMessage());
 
             return $this->flyWithNotification("{$this->controllerName}.index", 'Kaynak silinemedi. Lütfen daha sonra tekrar deneyin.', 'error');
         }
@@ -167,7 +159,7 @@ trait Controller
 
             return $this->generateDataTable($query);
         } catch (\Exception $e) {
-            Log::error('Failed to fetch resources: '.$e->getMessage());
+            Log::error('Failed to fetch resources: ' . $e->getMessage());
 
             return response()->json(['success' => false, 'message' => 'Failed to fetch resources. Please try again later.'], 500);
         }
@@ -182,8 +174,7 @@ trait Controller
                 try {
                     return $callback($item);
                 } catch (\Exception $e) {
-                    Log::error('Failed to process column'.$e->getMessage());
-
+                    Log::error('Failed to process column' . $e->getMessage());
                     return '-';
                 }
             });
@@ -196,8 +187,7 @@ trait Controller
                     'controllerName' => $this->controllerName,
                 ])->render();
             } catch (\Exception $e) {
-                Log::error('Failed to render actions column: '.$e->getMessage());
-
+                Log::error('Failed to render actions column: ' . $e->getMessage());
                 return '-';
             }
         });
